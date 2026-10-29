@@ -406,7 +406,6 @@ async function ensureSchema(env: Env): Promise<void> {
           SELECT app_id, panel_token FROM app_secrets WHERE panel_token IS NOT NULL
           ON CONFLICT (app_id) DO UPDATE SET panel_token = COALESCE(app_panel_tokens.panel_token, EXCLUDED.panel_token)
         `).catch(() => {});
-        await sqlClient(`ALTER TABLE app_secrets DROP COLUMN IF EXISTS panel_token`).catch(() => {});
         // Auto-generate panel_token for existing apps that don't have one
         await sqlClient(`UPDATE app_panel_tokens SET panel_token = gen_random_uuid()::text WHERE panel_token IS NULL`).catch(() => {});
         await sqlClient(`
@@ -415,11 +414,6 @@ async function ensureSchema(env: Env): Promise<void> {
           LEFT JOIN app_panel_tokens t ON t.app_id = a.app_id
           WHERE t.app_id IS NULL
         `).catch(() => {});
-      await sqlClient(`ALTER TABLE apps DROP COLUMN IF EXISTS login_limit`).catch(() => {});
-      await sqlClient(`ALTER TABLE apps DROP COLUMN IF EXISTS pin`).catch(() => {});
-      await sqlClient(`ALTER TABLE apps DROP COLUMN IF EXISTS panel_token`).catch(() => {});
-      await sqlClient(`ALTER TABLE apps DROP COLUMN IF EXISTS delete_protection_pin`).catch(() => {});
-      await sqlClient(`ALTER TABLE apps DROP COLUMN IF EXISTS delete_protection_enabled`).catch(() => {});
       // ensure default app + master PIN setting
     await sqlClient(
       `INSERT INTO apps (app_id, name, status) VALUES ($1,$2,'active')
