@@ -1,4 +1,4 @@
-name = "mr-panel4"
+name = "mr-panel5"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "artifacts/dashboard/dist/public"
@@ -7,4 +7,4 @@ pages_build_output_dir = "artifacts/dashboard/dist/public"
 [[durable_objects.bindings]]
 name = "EVENT_BUS"
 class_name = "EventBus"
-script_name = "event-bus-worker-mr-panel4"
+script_name = "event-bus-worker-mr-panel5"

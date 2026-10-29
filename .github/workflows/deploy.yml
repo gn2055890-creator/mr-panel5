@@ -45,16 +45,16 @@ jobs:
             echo "Could not verify Cloudflare Pages projects." >&2
             exit 1
           fi
-          if jq -e --arg name "mr-panel4" 'any(.result[]?; .name == $name)' <<<"${projects}" >/dev/null; then
-            echo "Cloudflare Pages project mr-panel4 is ready."
+          if jq -e --arg name "mr-panel5" 'any(.result[]?; .name == $name)' <<<"${projects}" >/dev/null; then
+            echo "Cloudflare Pages project mr-panel5 is ready."
           else
-            payload="$(jq -cn --arg name "mr-panel4" --arg branch "main" '{name: $name, production_branch: $branch}')"
+            payload="$(jq -cn --arg name "mr-panel5" --arg branch "main" '{name: $name, production_branch: $branch}')"
             created="$(curl -fsS -X POST -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json" --data "${payload}" "${api_url}")"
             if ! jq -e '.success == true' <<<"${created}" >/dev/null; then
-              echo "Could not create Cloudflare Pages project mr-panel4." >&2
+              echo "Could not create Cloudflare Pages project mr-panel5." >&2
               exit 1
             fi
-            echo "Created Cloudflare Pages project mr-panel4."
+            echo "Created Cloudflare Pages project mr-panel5."
           fi
 
       # Add the missing login-attempts table without deleting or replacing existing data.
@@ -116,10 +116,10 @@ jobs:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         run: |
           set -euo pipefail
-          printf '%s' "${NEON_DATABASE_URL}" | npx wrangler@3 pages secret put NEON_DATABASE_URL --project-name=mr-panel4
+          printf '%s' "${NEON_DATABASE_URL}" | npx wrangler@3 pages secret put NEON_DATABASE_URL --project-name=mr-panel5
           node --input-type=module <<'NODE'
           try {
-            const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/mr-panel4`, { headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}` } });
+            const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/mr-panel5`, { headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}` } });
             const result = await response.json();
             if (!response.ok || !result.success) throw new Error("Could not verify Pages configuration");
             const vars = result.result.deployment_configs.production.env_vars ?? {};
@@ -127,7 +127,7 @@ jobs:
               if (vars[signingKey]) continue;
               const { randomBytes } = await import("node:crypto");
               const signingSecret = randomBytes(48).toString("base64url");
-              const saved = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/mr-panel4`, {
+              const saved = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/mr-panel5`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ deployment_configs: { production: { env_vars: { [signingKey]: { type: "secret_text", value: signingSecret } }, wrangler_config_hash: result.result.deployment_configs.production.wrangler_config_hash } } })
@@ -169,7 +169,7 @@ jobs:
             if (!token.access_token) throw new Error('No access token');
             console.log('Google OAuth authentication: OK.');
             stage = 'FCM validation-only permission check';
-            const check = await fetch('https://fcm.googleapis.com/v1/projects/' + encodeURIComponent(credentials.project_id) + '/messages:send', { method: 'POST', headers: { Authorization: 'Bearer ' + token.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ validate_only: true, message: { topic: 'mr-panel4-config-check', data: { check: 'configuration-validation-only' } } }) });
+            const check = await fetch('https://fcm.googleapis.com/v1/projects/' + encodeURIComponent(credentials.project_id) + '/messages:send', { method: 'POST', headers: { Authorization: 'Bearer ' + token.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ validate_only: true, message: { topic: 'mr-panel5-config-check', data: { check: 'configuration-validation-only' } } }) });
             if (!check.ok) { const error = await check.json().catch(() => ({})); const code = /^[A-Z_]+$/.test(error.error?.status || '') ? error.error.status : 'UNSPECIFIED'; console.error('FCM validation-only check failed. HTTP status:', check.status, 'Code:', code); process.exit(1); }
             console.log('FCM validate_only: HTTP 200. No notification delivered.');
           } catch {
@@ -185,11 +185,11 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
           set -euo pipefail
-          printf '%s' "${FIREBASE_SERVICE_ACCOUNT_JSON}" | npx wrangler@3 pages secret put FIREBASE_SERVICE_ACCOUNT_JSON --project-name=mr-panel4
+          printf '%s' "${FIREBASE_SERVICE_ACCOUNT_JSON}" | npx wrangler@3 pages secret put FIREBASE_SERVICE_ACCOUNT_JSON --project-name=mr-panel5
 
       # 4. Deploy the dashboard to its own Pages project
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler@3 pages deploy artifacts/dashboard/dist/public --project-name=mr-panel4 --commit-dirty=true
+        run: npx wrangler@3 pages deploy artifacts/dashboard/dist/public --project-name=mr-panel5 --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

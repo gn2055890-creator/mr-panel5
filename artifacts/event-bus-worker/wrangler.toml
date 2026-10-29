@@ -1,4 +1,4 @@
-name = "event-bus-worker-mr-panel4"
+name = "event-bus-worker-mr-panel5"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
